@@ -255,6 +255,29 @@ class TestTokenExchangeAndUserInfo:
         )
         tokens = exchange_code_for_tokens("test_code", "test_verifier", "https://bazarr/callback")
         assert tokens["access_token"] == "acc_123"
+        last_req = requests_mock.last_request
+        assert "Authorization" not in last_req.headers
+        assert "client_secret=supersecret" in last_req.text
+        assert "client_id=bazarr" in last_req.text
+
+    def test_exchange_code_for_tokens_error_logs(self, monkeypatch, requests_mock, caplog):
+        monkeypatch.setenv("OIDC_ISSUER_URL", "https://auth.example.com")
+        monkeypatch.setenv("OIDC_CLIENT_ID", "bazarr")
+        requests_mock.get(
+            "https://auth.example.com/.well-known/openid-configuration",
+            json={
+                "authorization_endpoint": "https://auth.example.com/oauth2/auth",
+                "token_endpoint": "https://auth.example.com/oauth2/token",
+            },
+        )
+        requests_mock.post(
+            "https://auth.example.com/oauth2/token",
+            status_code=400,
+            text='{"error": "invalid_grant"}',
+        )
+        with pytest.raises(requests.HTTPError):
+            exchange_code_for_tokens("test_code", "test_verifier", "https://bazarr/callback")
+        assert "invalid_grant" in caplog.text
 
     def test_fetch_userinfo(self, monkeypatch, requests_mock):
         monkeypatch.setenv("OIDC_ISSUER_URL", "https://auth.example.com")

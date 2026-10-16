@@ -240,10 +240,8 @@ def exchange_code_for_tokens(code: str, code_verifier: str, redirect_uri: str) -
         "code_verifier": code_verifier,
     }
 
-    auth = None
     if cfg["client_secret"]:
         data["client_secret"] = cfg["client_secret"]
-        auth = (cfg["client_id"], cfg["client_secret"])
 
     headers = {
         "Content-Type": "application/x-www-form-urlencoded",
@@ -251,7 +249,9 @@ def exchange_code_for_tokens(code: str, code_verifier: str, redirect_uri: str) -
     }
 
     logger.debug(f"Exchanging authorization code at {token_endpoint}")
-    resp = requests.post(token_endpoint, data=data, auth=auth, headers=headers, timeout=15)
+    resp = requests.post(token_endpoint, data=data, headers=headers, timeout=15)
+    if resp.status_code >= 400:
+        logger.error(f"OIDC token endpoint returned error status {resp.status_code}: {resp.text}")
     resp.raise_for_status()
     tokens = resp.json()
     if not isinstance(tokens, dict):
