@@ -26,3 +26,5 @@ VERSION
 # Allow
 !*.dll
 
+.coverage
+.pytest_cache

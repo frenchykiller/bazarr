@@ -115,6 +115,11 @@ def catch_all(path):
         if auth:
             inject["apiKey"] = settings.auth.apikey
 
+        from .oidc import get_oidc_config
+        oidc_config = get_oidc_config()
+        inject["oidcEnabled"] = oidc_config["enabled"]
+        inject["oidcDisplayName"] = oidc_config["displayName"]
+
     template_url = base_url
     if not template_url.endswith("/"):
         template_url += "/"

@@ -383,7 +383,10 @@ class TableShowsRootfolder(Base):
 
 
 def init_db():
-    database.begin()
+    try:
+        database.begin()
+    except Exception:
+        pass
 
     # Create tables if they don't exist.
     metadata.create_all(engine)

@@ -84,22 +84,29 @@ for name in os.listdir(os.path.dirname(__file__)):
                         base = Provider
                     else:
                         if _Provider in base.__bases__:
-                            base.__bases__ = (Provider,)
+                            try:
+                                base.__bases__ = (Provider,)
+                            except TypeError:
+                                pass
                     new_bases.append(base)
 
                 cls.__bases__ = tuple(new_bases)
 
                 # patch subtitle bases
-                new_bases = []
-                for base in cls.subtitle_class.__bases__:
-                    if base == _Subtitle:
-                        base = Subtitle
-                    else:
-                        if _Subtitle in base.__bases__:
-                            base.__bases__ = (Subtitle,)
-                    new_bases.append(base)
+                if getattr(cls, 'subtitle_class', None) and hasattr(cls.subtitle_class, '__bases__'):
+                    new_bases = []
+                    for base in cls.subtitle_class.__bases__:
+                        if base == _Subtitle:
+                            base = Subtitle
+                        else:
+                            if _Subtitle in base.__bases__:
+                                try:
+                                    base.__bases__ = (Subtitle,)
+                                except TypeError:
+                                    pass
+                        new_bases.append(base)
 
-                cls.subtitle_class.__bases__ = tuple(new_bases)
+                    cls.subtitle_class.__bases__ = tuple(new_bases)
 
             # inject our requests.Session wrapper for automatic retry but not for specific providers that are already
             # struggling and that we don't want to hurt more

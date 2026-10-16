@@ -223,3 +223,8 @@ path_mappings.update()
 # Initialize Plex OAuth configuration
 from app.config import initialize_plex
 initialize_plex()
+
+# Initialize OIDC configuration
+from app.oidc import initialize_oidc
+initialize_oidc()
+

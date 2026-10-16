@@ -28,6 +28,9 @@ def create_app():
     Compress(app)
     app.wsgi_app = ReverseProxied(app.wsgi_app)
 
+    from .oidc import initialize_oidc
+    initialize_oidc()
+
     app.config["SECRET_KEY"] = settings.general.flask_secret_key
     app.config['JSONIFY_PRETTYPRINT_REGULAR'] = True
     app.config['JSON_AS_ASCII'] = False

@@ -44,4 +44,16 @@ export const Environment = {
     }
     return false;
   },
+  get oidcEnabled(): boolean {
+    if (isDevEnv || isTestEnv) {
+      return false;
+    }
+    return Boolean(window.Bazarr?.oidcEnabled);
+  },
+  get oidcDisplayName(): string {
+    if (isDevEnv || isTestEnv) {
+      return "Login with OIDC";
+    }
+    return window.Bazarr?.oidcDisplayName || "Login with OIDC";
+  },
 };

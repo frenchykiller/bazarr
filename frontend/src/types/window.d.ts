@@ -21,4 +21,6 @@ export interface BazarrServer {
   apiKey?: string;
   canUpdate: boolean;
   hasUpdate: boolean;
+  oidcEnabled?: boolean;
+  oidcDisplayName?: string;
 }

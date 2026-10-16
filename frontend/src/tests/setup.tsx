@@ -106,6 +106,12 @@ beforeEach(() => {
     http.get("/api/system/languages/profiles", () => {
       return HttpResponse.json([]);
     }),
+    http.get("/api/auth/oidc/config", () => {
+      return HttpResponse.json({
+        enabled: false,
+        displayName: "Login with OIDC",
+      });
+    }),
   );
 });
 

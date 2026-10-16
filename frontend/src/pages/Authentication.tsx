@@ -1,4 +1,4 @@
-import { FunctionComponent, useState } from "react";
+import { FunctionComponent, useEffect, useState } from "react";
 import {
   Alert,
   Avatar,
@@ -23,6 +23,63 @@ const Authentication: FunctionComponent = () => {
   useDocumentTitle("Login - Bazarr");
   const { login, isLoggingIn } = useSystem();
   const [error, setError] = useState<string | null>(null);
+  const [oidcConfig, setOidcConfig] = useState<{
+    enabled: boolean;
+    displayName: string;
+  }>({
+    enabled: Boolean(
+      typeof window !== "undefined" && window.Bazarr?.oidcEnabled,
+    ),
+    displayName:
+      (typeof window !== "undefined" && window.Bazarr?.oidcDisplayName) ||
+      "Login with OIDC",
+  });
+
+  useEffect(() => {
+    let mounted = true;
+
+    if (typeof window !== "undefined") {
+      const searchParams = new URLSearchParams(window.location.search);
+      const urlError = searchParams.get("error");
+      if (urlError) {
+        if (urlError === "access_denied") {
+          setError("Access denied by OIDC Identity Provider.");
+        } else if (urlError === "unauthorized_group") {
+          setError(
+            "Access denied: your account is not a member of the required admin group.",
+          );
+        } else if (urlError === "invalid_request") {
+          setError("OIDC authentication error: Invalid request parameters.");
+        } else if (urlError === "invalid_state") {
+          setError(
+            "OIDC authentication error: State mismatch or session expired.",
+          );
+        } else if (urlError === "oidc_disabled") {
+          setError("OIDC login is currently disabled on this server.");
+        } else {
+          setError(`OIDC error: ${urlError}`);
+        }
+      }
+    }
+
+    fetch(`${Environment.baseUrl}/api/auth/oidc/config`)
+      .then((res) => (res.ok ? res.json() : null))
+      .then((data) => {
+        if (mounted && data) {
+          setOidcConfig({
+            enabled: Boolean(data.enabled),
+            displayName: data.displayName || "Login with OIDC",
+          });
+        }
+      })
+      .catch(() => {
+        // Silently retain window.Bazarr state on network error
+      });
+
+    return () => {
+      mounted = false;
+    };
+  }, []);
 
   const form = useForm({
     initialValues: {
@@ -64,6 +121,25 @@ const Authentication: FunctionComponent = () => {
               </Text>
             </Stack>
             <Divider />
+            {error && (
+              <Alert aria-live="assertive" color="red" variant="light">
+                {error}
+              </Alert>
+            )}
+            {oidcConfig.enabled && (
+              <>
+                <Button
+                  component="a"
+                  fullWidth
+                  href={`${Environment.baseUrl}/api/auth/oidc/login`}
+                  size="md"
+                  variant="outline"
+                >
+                  {oidcConfig.displayName}
+                </Button>
+                <Divider label="or" labelPosition="center" />
+              </>
+            )}
             <form
               onSubmit={form.onSubmit((values) => {
                 setError(null);
@@ -77,11 +153,6 @@ const Authentication: FunctionComponent = () => {
               })}
             >
               <Stack gap="md">
-                {error && (
-                  <Alert aria-live="assertive" color="red" variant="light">
-                    {error}
-                  </Alert>
-                )}
                 <TextInput
                   autoComplete="username"
                   autoFocus

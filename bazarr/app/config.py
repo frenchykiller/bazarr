@@ -1590,3 +1590,16 @@ def initialize_plex():
             logging.warning("Plex OAuth cache cleanup - module not found")
     
     logging.debug("Plex configuration initialized")
+
+
+def get_oidc_config():
+    """Retrieve OIDC configuration for public endpoints and UI injection."""
+    from .oidc import get_oidc_config as _get_oidc_config
+    return _get_oidc_config()
+
+
+def is_oidc_enabled():
+    """Check if OIDC authentication is enabled."""
+    from .oidc import is_oidc_enabled as _is_oidc_enabled
+    return _is_oidc_enabled()
+
